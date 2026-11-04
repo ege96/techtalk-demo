@@ -1,0 +1,18 @@
+# Optional one-command alternative to the "docker run" steps in appendix A1/A2.
+# docker compose up -d   starts Postgres + pgvector, creates "demo" and runs schema.sql.
+# docker compose down -v resets everything.
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    container_name: pgv
+    environment:
+      POSTGRES_PASSWORD: pw   # local demo only, never use this anywhere real
+      POSTGRES_DB: demo
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "demo"]
+      interval: 2s
+      retries: 15

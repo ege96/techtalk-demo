@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recipe search, three ways</title>
+<style>
+  :root { --bg:#f7f5f0; --card:#fff; --ink:#1d1d1f; --muted:#6b6b6b; --line:#e2ded5; --accent:#2457c5; }
+  * { box-sizing: border-box; }
+  body { margin:0; font: 20px/1.4 system-ui, sans-serif; background:var(--bg); color:var(--ink); }
+  main { max-width: 1200px; margin: 0 auto; padding: 32px 16px; }
+  h1 { font-size: 28px; margin: 0 0 16px; }
+  form { display:flex; gap:12px; flex-wrap:wrap; }
+  input { flex:1 1 320px; font:inherit; padding:12px 14px; border:2px solid var(--line); border-radius:10px; }
+  button { font:inherit; padding:12px 18px; border:0; border-radius:10px; background:var(--accent); color:#fff; cursor:pointer; }
+  .examples { margin:12px 0 24px; display:flex; gap:8px; flex-wrap:wrap; }
+  .examples button { background:var(--card); color:var(--ink); border:1px solid var(--line); font-size:16px; padding:6px 12px; }
+  .cols { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:16px; }
+  section { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; }
+  h2 { font-size:18px; margin:0 0 4px; }
+  .sub { color:var(--muted); font-size:15px; margin:0 0 12px; }
+  ol { margin:0; padding-left:24px; }
+  li { padding:4px 0; }
+  .empty { color:var(--muted); font-style:italic; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Recipe search, three ways</h1>
+  <form id="f">
+    <input id="q" value="a quick dinner without meat" autocomplete="off" aria-label="Search query">
+    <button>Search</button>
+  </form>
+  <div class="examples">
+    <button type="button">a quick dinner without meat</button>
+    <button type="button">dal bhat</button>
+    <button type="button">easy meatless meals</button>
+    <button type="button">Nepali food</button>
+    <button type="button">something sweet to bake</button>
+  </div>
+  <div class="cols">
+    <section><h2>Keyword</h2><p class="sub">Postgres full-text search</p><ol id="keyword"></ol></section>
+    <section><h2>Semantic</h2><p class="sub">pgvector cosine distance</p><ol id="semantic"></ol></section>
+    <section><h2>Hybrid</h2><p class="sub">Both, fused with RRF</p><ol id="hybrid"></ol></section>
+  </div>
+</main>
+<script>
+  const modes = ["keyword", "semantic", "hybrid"];
+  async function run(q) {
+    for (const mode of modes) {
+      const list = document.getElementById(mode);
+      list.innerHTML = "";
+      try {
+        const res = await fetch(`/search?mode=${mode}&q=${encodeURIComponent(q)}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const titles = await res.json();
+        if (titles.length === 0) list.innerHTML = '<li class="empty">No results</li>';
+        for (const t of titles) {
+          const li = document.createElement("li");
+          li.textContent = t;
+          list.appendChild(li);
+        }
+      } catch (err) {
+        list.innerHTML = `<li class="empty">Error: ${err.message}</li>`;
+      }
+    }
+  }
+  const input = document.getElementById("q");
+  document.getElementById("f").addEventListener("submit", (e) => { e.preventDefault(); run(input.value); });
+  document.querySelectorAll(".examples button").forEach((b) =>
+    b.addEventListener("click", () => { input.value = b.textContent; run(b.textContent); }));
+  run(input.value);
+</script>
+</body>
+</html>
