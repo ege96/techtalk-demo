@@ -1,0 +1,15 @@
+[project]
+name = "pgvector-demo"
+version = "0.1.0"
+description = "Recipe search three ways: keyword, semantic (pgvector) and hybrid"
+requires-python = ">=3.10"
+dependencies = [
+    "psycopg[binary]>=3.1",
+    "pgvector>=0.3",
+    "fastembed>=0.5",
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+]
+
+[tool.uv]
+package = false
